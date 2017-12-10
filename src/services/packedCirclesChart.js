@@ -1,6 +1,6 @@
 import * as d3 from "d3"
 
-export const drawPackedCirclesChart = ({selector, data}) => {
+export const drawPackedCirclesChart = ({selector, data, onFileClick}) => {
   const svg = d3.select(selector);
   const margin = 20;
   const diameter = +svg.attr("width"),
@@ -28,12 +28,12 @@ export const drawPackedCirclesChart = ({selector, data}) => {
     .enter().append("circle")
     .attr("class", function (d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
     .style("fill", function (d) {
-      console.log(d.depth)
-      return d.children ? color(d.depth) : null;
+      return d.children ? color(d.depth) : "darkgrey";
     })
     .on("click", function (d) {
       if (focus !== d) {
-        zoom(d), d3.event.stopPropagation();
+        zoom(d);
+        d3.event.stopPropagation();
       }
     });
 

@@ -3,7 +3,7 @@ import './App.css';
 import {getDuplicatesJson} from "./services/apiService"
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import {docco} from 'react-syntax-highlighter/styles/hljs';
-import {EXAMPLE_DUPLICATION_REPORT, getDuplicationReportDirectories} from "./services/duplicationReportService"
+import {getDuplicationReportDirectories} from "./services/duplicationReportService"
 import {drawPackedCirclesChart} from "./services/packedCirclesChart"
 
 class App extends Component {
@@ -15,7 +15,8 @@ class App extends Component {
       .then(console.log)
       .catch(console.error)
 
-    const directories = getDuplicationReportDirectories(EXAMPLE_DUPLICATION_REPORT);
+    const directories = getDuplicationReportDirectories(require("./data/duplicates.json"))
+
     window.setTimeout(() => {
       drawPackedCirclesChart({selector: "#chart", data: directories});
 
