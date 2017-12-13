@@ -23,21 +23,28 @@ export const drawPackedCirclesChart = ({selector, data, onFileClick}) => {
     nodes = pack(root).descendants(),
     view;
 
-  var circle = g.selectAll("circle")
+  const circleSelection = g.selectAll("circle.node")
     .data(nodes)
+
+  var circle = circleSelection
     .enter().append("circle")
     .attr("class", function (d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
     .style("fill", function (d) {
       return d.children ? color(d.depth) : "darkgrey";
     })
-    .on("click", function (d) {
-      if (focus !== d) {
-        zoom(d);
-        d3.event.stopPropagation();
-      }
-    });
 
-  var text = g.selectAll("text")
+  circle.merge(circleSelection).on("click", (d, e) => {
+    if (focus !== d) {
+      zoom(d);
+      d3.event.stopPropagation();
+
+      if (onFileClick && d.height === 0) {
+        onFileClick(d.data);
+      }
+    }
+  })
+
+  g.selectAll("text")
     .data(nodes)
     .enter().append("text")
     .attr("class", "label")

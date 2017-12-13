@@ -3,7 +3,7 @@
     margin: 0;
 }
 
-#chart{
+#chart {
     width: 750px;
     height: 750px;
 }
@@ -28,7 +28,15 @@
 }
 
 .label,
-.node--root,
-.node--leaf {
+.node--root {
     pointer-events: none;
+}
+
+.packed-circles-left {
+    width: 50%;
+    float: left;
+}
+
+.packed-circles-view {
+    width: 100%;
 }

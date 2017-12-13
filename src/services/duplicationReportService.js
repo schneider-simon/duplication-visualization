@@ -1,5 +1,6 @@
 import _groupBy from 'lodash/groupBy'
 import _trim from 'lodash/trim'
+import _uniq from 'lodash/uniq'
 
 export const getDuplicationReportDirectories = (duplicationReport) => {
   const directories = {"name": "flare", "children": []};
@@ -16,7 +17,9 @@ export const getDuplicationReportDirectories = (duplicationReport) => {
       const isLast = i === pieces.length - 1;
 
       if (isLast) {
-        currentObject.children.push({name: piece, size: lines.length})
+        const path = (entries[0] && entries[0].location) ? entries[0].location.path : ""
+
+        currentObject.children.push({name: piece, size: lines.length, entries, path})
         return;
       }
 
@@ -64,4 +67,28 @@ export const getDuplicationNodeSize = (node) => {
   }
 
   return Math.max(node.endLine - node.startLine, 1)
+}
+
+export const getLineNumbersFromLocation = (location) => {
+  if (!location || !location.length) {
+    return []
+  }
+
+  const array = [];
+
+  for (let i = location.startLine; i <= location.endLine; i++) {
+    array.push(i)
+  }
+
+  return array
+}
+
+export const getLineNumbersFromEntries = (entries) => {
+  const lines = entries.map((entry) => {
+    return getLineNumbersFromLocation(entry.location)
+  })
+
+  return _uniq(lines.reduce((a, lines) => {
+    return a.concat(lines)
+  }, []))
 }
