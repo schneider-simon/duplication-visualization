@@ -10,6 +10,7 @@ import {get as _get} from "lodash"
 import RawReport from "./components/RawReport"
 import {PackedCirclesChart} from "./services/packedCirclesChart"
 import {drawGraphChart} from "./services/graphChart"
+import QuickFacts from "./components/QuickFacts"
 
 class App extends Component {
 
@@ -146,6 +147,9 @@ class App extends Component {
         <hr/>
 
         <RawReport files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+
+        <hr/>
+        <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
 
       </div>
     );

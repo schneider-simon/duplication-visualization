@@ -72,6 +72,7 @@ class RawReport extends React.Component {
     return (
       <div className="raw-report">
         <ReactTable
+          filterable={true}
           id='id'
           data={data}
           columns={columns}
