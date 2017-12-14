@@ -1,8 +1,3 @@
-* {
-    padding: 0;
-    margin: 0;
-}
-
 #chart {
     width: 750px;
     height: 750px;
@@ -40,3 +35,43 @@
 .packed-circles-view {
     width: 100%;
 }
+
+.packed-circles-view td {
+    width: 50%;
+    padding: 0 5px;
+    vertical-align: top;
+}
+
+.packed-circles-view tr td:first-child {
+    padding-left: 0;
+}
+
+.packed-circles-view tr td:last-child {
+    padding-right: 0;
+}
+
+.App {
+    padding: 10px;
+}
+
+.syntax-highlight {
+    max-height: 750px;
+    max-width: 50vw;
+    overflow: scroll;
+}
+
+#graph-chart canvas {
+    min-height: 500px;
+    max-width: 80%;
+    margin: 0 auto;
+    background: white;
+}
+
+.clone-file-details {
+    cursor: pointer;
+}
+
+.clone-file-details:hover {
+    opacity: 0.5;
+}
+

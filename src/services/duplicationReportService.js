@@ -1,6 +1,9 @@
 import _groupBy from 'lodash/groupBy'
 import _trim from 'lodash/trim'
 import _uniq from 'lodash/uniq'
+import _keyBy from 'lodash/keyBy'
+import _get from 'lodash/get'
+import {getFileNameFromPath} from "./stringHelper"
 
 export const getDuplicationReportDirectories = (duplicationReport) => {
   const directories = {"name": "flare", "children": []};
@@ -56,8 +59,6 @@ export const getReportPerFile = (duplicationReport) => {
     }
   })
 
-  console.log("FILES", files)
-
   return files;
 }
 
@@ -83,6 +84,14 @@ export const getLineNumbersFromLocation = (location) => {
   return array
 }
 
+export const getLinesAmountFromLocation = (location) => {
+  if (!location || !location.length) {
+    return 0
+  }
+
+  return (location.endLine - location.startLine) + 1
+}
+
 export const getLineNumbersFromEntries = (entries) => {
   const lines = entries.map((entry) => {
     return getLineNumbersFromLocation(entry.location)
@@ -91,4 +100,101 @@ export const getLineNumbersFromEntries = (entries) => {
   return _uniq(lines.reduce((a, lines) => {
     return a.concat(lines)
   }, []))
+}
+
+export const getNodesFromReport = (report) => {
+  return report.nodes.map((node) => {
+    return {
+      id: node.id,
+      label: node.id,
+      data: node
+    }
+  })
+}
+
+export const getEdgesFromReport = (report) => {
+  return report.connections.reduce((a, connectionList) => {
+    const edges = []
+
+    for (let i = 0; i !== connectionList.length; i++) {
+      for (let j = i + 1; j < connectionList.length; j++) {
+        const connection = [connectionList[i], connectionList[j]].sort()
+
+        edges.push({
+          from: connection[0],
+          to: connection[1]
+        })
+      }
+    }
+
+    return a.concat(edges)
+  }, [])
+}
+
+export const getFileNodesFromReport = (report) => {
+  const files = getReportPerFile(report)
+
+  return Object.keys(files).map(path => {
+    const file = files[path]
+    return {
+      id: path,
+      label: "",
+      title: path,
+      data: file
+    }
+  })
+}
+
+export const getFileEdgesFromReport = (report) => {
+  const files = getReportPerFile(report)
+  const clones = _keyBy(report.nodes, 'id')
+
+  const edges = []
+
+  Object.keys(files).forEach(path => {
+    const nodes = files[path]
+    const connections = _uniq(nodes.reduce((a, node) => {
+      const connectionsToNode = getConnectionsForId(node.id, report)
+      return a.concat(connectionsToNode)
+    }, []))
+
+    const connectedFiles = _uniq(connections.map(id => {
+      return _get(clones[id], 'location.path')
+    })).filter(_path => _path !== path)
+
+    connectedFiles.forEach(_path => {
+      const paths = [path, _path].sort()
+      edges.push({
+        from: paths[0],
+        to: paths[1]
+      })
+    })
+  })
+
+  return edges
+}
+
+export const getConnectionsForId = (id, report) => {
+  return report.connections.find(ids => {
+    return ids.indexOf(parseInt(id)) !== -1
+  })
+}
+
+export const getDuplicationClasses = (report) => {
+  const nodes = _keyBy(report.nodes, 'id')
+
+  return report.connections.map((connections) => {
+    const duplicationClass = {
+      id: connections[0],
+      connections: connections,
+      nodes: connections.map(id => nodes[id]),
+    }
+
+    duplicationClass.length = getLinesAmountFromLocation(duplicationClass.nodes[0].location)
+    duplicationClass.files = _uniq(duplicationClass.nodes.map((node) => {
+      return _get(node, 'location.path')
+    }))
+
+    return duplicationClass
+  })
 }
