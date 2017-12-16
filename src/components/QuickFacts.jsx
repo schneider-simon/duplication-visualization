@@ -1,11 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {keyBy as _keyBy, sortBy as _sortBy} from 'lodash'
+import {keyBy as _keyBy, sortBy as _sortBy, get as _get} from 'lodash'
 import {renderCloneClass, renderFileMetrics} from "../services/stringHelper"
 import {getLineNumbersFromEntries, getLinesAmountFromLocation, getReportPerFile} from "../services/duplicationReportService"
 
 class QuickFacts extends React.Component {
+
+  renderFile(file) {
+    const label = renderFileMetrics(file)
+    return <a href="#" onClick={() => this.props.onSelectFile(file)}>{label}</a>
+  }
+
   render() {
+    console.log("REPORT", this.props.report)
     if (!this.props.report) {
       return null
     }
@@ -20,7 +27,8 @@ class QuickFacts extends React.Component {
         path: path,
         duplicateLines: lines,
         duplicateLinesCount: lines.length,
-        nodes: nodes
+        nodes: nodes,
+        entries: nodes
       }
     })
 
@@ -56,6 +64,22 @@ class QuickFacts extends React.Component {
         <table className="table">
           <tbody>
           <tr>
+            <th>
+              Project name
+            </th>
+            <td>
+              {_get(this.props.report, 'project.name')}
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Project lines of code
+            </th>
+            <td>
+              {_get(this.props.report, 'project.linesOfCode')}
+            </td>
+          </tr>
+          <tr>
             <th>Clone classes</th>
             <td>{this.props.report.connections.length}</td>
           </tr>
@@ -77,11 +101,11 @@ class QuickFacts extends React.Component {
           </tr>
           <tr>
             <th>File with most cloned lines</th>
-            <td>{renderFileMetrics(largestFileByDuplicateLines)}</td>
+            <td>{this.renderFile(largestFileByDuplicateLines)}</td>
           </tr>
           <tr>
-            <th>File with most cloned lines</th>
-            <td>{renderFileMetrics(largestFileByDuplicates)}</td>
+            <th>File with most distinct clones</th>
+            <td>{this.renderFile(largestFileByDuplicates)}</td>
           </tr>
           </tbody>
         </table>

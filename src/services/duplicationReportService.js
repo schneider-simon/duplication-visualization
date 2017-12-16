@@ -67,6 +67,10 @@ export const getDuplicationNodeSize = (node) => {
     return 0;
   }
 
+  if (node.linesOfCode) {
+    return node.linesOfCode
+  }
+
   return Math.max(node.endLine - node.startLine, 1)
 }
 
@@ -87,6 +91,10 @@ export const getLineNumbersFromLocation = (location) => {
 export const getLinesAmountFromLocation = (location) => {
   if (!location || !location.length) {
     return 0
+  }
+
+  if (location.linesOfCode) {
+    return location.linesOfCode
   }
 
   return (location.endLine - location.startLine) + 1

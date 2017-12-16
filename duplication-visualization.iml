@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/public/projects/hsqldb" />
       <excludeFolder url="file://$MODULE_DIR$/public/projects/smallsql" />
+      <excludeFolder url="file://$MODULE_DIR$/public/projects/test-project" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

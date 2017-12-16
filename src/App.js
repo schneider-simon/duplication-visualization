@@ -20,7 +20,7 @@ class App extends Component {
     this.state = {
       selectedFile: null,
       files: {},
-      report: require("./data/duplicates2.json")
+      report: require("./data/duplicates.json")
     }
 
     this.packedCirclesChart = null
@@ -29,7 +29,7 @@ class App extends Component {
   }
 
   onSelectFile(file) {
-    const url = `projects/${this.state.report.project.directory}${file.path}`
+    const url = `projects/${this.state.report.project.name}${file.path}`
 
     if (this.state.report.project && typeof this.state.files[file.path] === 'undefined') {
       fetch(url)
@@ -123,7 +123,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <h1>Project: {_get(this.state.report, 'project.directory')}</h1>
+        <h1>Project: {_get(this.state.report, 'project.name')}</h1>
 
         <table className="packed-circles-view">
           <tbody>
