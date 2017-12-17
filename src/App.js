@@ -20,7 +20,8 @@ class App extends Component {
     this.state = {
       selectedFile: null,
       files: {},
-      report: require("./data/duplicates.json")
+      report: null,
+      reportInput: ""
     }
 
     this.packedCirclesChart = null
@@ -54,8 +55,21 @@ class App extends Component {
     getDuplicatesJson()
       .then(console.log)
       .catch(console.error)
+  }
 
-    const directories = getDuplicationReportDirectories(this.state.report)
+  componentDidUpdate(previousProps, previousState) {
+    if (this.packedCirclesChart) {
+      this.packedCirclesChart.update({
+        selectedFile: this.state.selectedFile
+      })
+    }
+
+  }
+
+  onUseReportInput() {
+    const report = JSON.parse(this.state.reportInput);
+
+    const directories = getDuplicationReportDirectories(report)
 
     window.setTimeout(() => {
       this.packedCirclesChart = new PackedCirclesChart({
@@ -65,18 +79,14 @@ class App extends Component {
         selectedFile: this.state.selectedFile
       });
 
-      drawGraphChart({selector: "#graph-chart", data: this.state.report});
+      drawGraphChart({selector: "#graph-chart", data: report});
 
     }, 500)
     console.log(directories);
-  }
 
-  componentDidUpdate() {
-    if (this.packedCirclesChart) {
-      this.packedCirclesChart.update({
-        selectedFile: this.state.selectedFile
-      })
-    }
+    this.setState({
+      report: report
+    })
   }
 
   lineStyle(lineNumber) {
@@ -120,37 +130,70 @@ class App extends Component {
     </div>
   }
 
+  renderReportInput() {
+    const isDisabled = () => {
+      try {
+        const report = JSON.parse(this.state.reportInput)
+        return !report.project || !report.connections;
+      } catch (e) {
+        return true
+      }
+    }
+
+    const onClick = () => {
+      if (isDisabled()) {
+        return;
+      }
+
+      return this.onUseReportInput()
+    }
+
+    return <div className="report-input container">
+      <textarea className="form-control" value={this.state.reportInput} onChange={e => this.setState({reportInput: e.target.value})}/>
+      <button disabled={isDisabled()} onClick={onClick} className="btn btn-primary btn-block">Visualize</button>
+    </div>
+  }
+
+  renderReport() {
+    if (!this.state.report) {
+      return this.renderReportInput();
+    }
+
+    return <div className="app-report">
+      <h1>Project: {_get(this.state.report, 'project.name')}</h1>
+
+      <table className="packed-circles-view">
+        <tbody>
+        <tr>
+          <td>
+            <h3>&nbsp;</h3>
+            <svg width="600" height="600" id="chart"/>
+          </td>
+          <td>
+            {this.renderSelectedFilePreview()}
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <hr/>
+      <div id="graph-chart">
+
+      </div>
+
+      <hr/>
+
+      <RawReport files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+
+      <hr/>
+      <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+    </div>
+  }
+
   render() {
     return (
       <div className="App">
-        <h1>Project: {_get(this.state.report, 'project.name')}</h1>
-
-        <table className="packed-circles-view">
-          <tbody>
-          <tr>
-            <td>
-              <h3>&nbsp;</h3>
-              <svg width="600" height="600" id="chart"/>
-            </td>
-            <td>
-              {this.renderSelectedFilePreview()}
-            </td>
-          </tr>
-          </tbody>
-        </table>
-
-        <hr/>
-        <div id="graph-chart">
-
-        </div>
-
-        <hr/>
-
-        <RawReport files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
-
-        <hr/>
-        <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
-
+        {this.renderReport()}
       </div>
     );
   }
