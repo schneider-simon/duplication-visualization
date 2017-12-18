@@ -1,33 +1,49 @@
 import vis from 'vis'
 import {getEdgesFromReport, getFileEdgesFromReport, getFileNodesFromReport, getNodesFromReport} from "./duplicationReportService"
 
-export const drawGraphChart = ({selector, data, useClones}) => {
-  let nodes, edges;
+export class GraphChart {
+  constructor(props) {
+    this.props = props
 
-  if (!useClones) {
-    nodes = new vis.DataSet(getFileNodesFromReport(data))
-    edges = new vis.DataSet(getFileEdgesFromReport(data))
-  } else {
-    nodes = new vis.DataSet(getNodesFromReport(data))
-    edges = new vis.DataSet(getEdgesFromReport(data))
+    this.network = null
+
+    this.nodes = null
+    this.edges = null
+
+    this.init();
   }
 
-  // create a network
-  var container = document.querySelector(selector);
-  var networkData = {
-    nodes: nodes,
-    edges: edges
-  };
+  init() {
+    const data = this.props.data;
 
-  var options = {
-    edges: {
-      smooth: false
+    if (!this.props.useClones) {
+      this.nodes = new vis.DataSet(getFileNodesFromReport(data))
+      this.edges = new vis.DataSet(getFileEdgesFromReport(data))
+    } else {
+      this.nodes = new vis.DataSet(getNodesFromReport(data))
+      this.edges = new vis.DataSet(getEdgesFromReport(data))
     }
-  };
 
-  const network = new vis.Network(container, networkData, options);
+    const container = document.querySelector(this.props.selector)
+    const networkData = {
+      nodes: this.nodes,
+      edges: this.edges
+    }
 
-  network.on("stabilizationIterationsDone", function () {
-    network.setOptions({physics: true});
-  })
+    const options = {
+      edges: {
+        smooth: false
+      }
+    }
+
+    this.network = new vis.Network(container, networkData, options);
+
+    this.network.on("stabilizationIterationsDone", () => {
+      this.network.setOptions({physics: true});
+    })
+  }
+
+  update() {
+    console.log("UPDATE graph chart")
+  }
 }

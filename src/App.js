@@ -2,15 +2,17 @@ import React, {Component} from 'react';
 import 'bootstrap/dist/css/bootstrap.css'
 import 'react-table/react-table.css'
 import './App.css';
-import {getDuplicatesJson} from "./services/apiService"
+import './styles/icons/css/fontello.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import {tomorrowNightEighties} from 'react-syntax-highlighter/styles/hljs';
 import {getDuplicationReportDirectories, getLineNumbersFromEntries} from "./services/duplicationReportService"
 import {get as _get} from "lodash"
 import RawReport from "./components/RawReport"
 import {PackedCirclesChart} from "./services/packedCirclesChart"
-import {drawGraphChart} from "./services/graphChart"
+import {drawGraphChart, GraphChart} from "./services/graphChart"
 import QuickFacts from "./components/QuickFacts"
+import * as classnames from "classnames"
+import {Nav, NavItem, NavLink, TabContent, TabPane} from "reactstrap"
 
 class App extends Component {
 
@@ -20,11 +22,14 @@ class App extends Component {
     this.state = {
       selectedFile: null,
       files: {},
-      report: null,
-      reportInput: ""
+      //report: null,
+      report: require('./data/duplicates.json'),
+      reportInput: "",
+      activeTab: "facts"
     }
 
     this.packedCirclesChart = null
+    this.graphChart = null
 
     this.onSelectFile = this.onSelectFile.bind(this)
   }
@@ -52,9 +57,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    getDuplicatesJson()
-      .then(console.log)
-      .catch(console.error)
+    this.onInitReport()
   }
 
   componentDidUpdate(previousProps, previousState) {
@@ -64,12 +67,17 @@ class App extends Component {
       })
     }
 
+    if (!previousState.report && this.state.report) {
+      this.onInitReport()
+    }
   }
 
-  onUseReportInput() {
-    const report = JSON.parse(this.state.reportInput);
+  onInitReport() {
+    if (!this.state.report) {
+      return
+    }
 
-    const directories = getDuplicationReportDirectories(report)
+    const directories = getDuplicationReportDirectories(this.state.report)
 
     window.setTimeout(() => {
       this.packedCirclesChart = new PackedCirclesChart({
@@ -79,10 +87,22 @@ class App extends Component {
         selectedFile: this.state.selectedFile
       });
 
-      drawGraphChart({selector: "#graph-chart", data: report});
+      this.graphChart = new GraphChart({selector: "#graph-chart", data: this.state.report});
 
     }, 500)
     console.log(directories);
+  }
+
+  toggle(tab) {
+    if (this.state.activeTab !== tab) {
+      this.setState({
+        activeTab: tab
+      });
+    }
+  }
+
+  onUseReportInput() {
+    const report = JSON.parse(this.state.reportInput);
 
     this.setState({
       report: report
@@ -161,32 +181,34 @@ class App extends Component {
 
     return <div className="app-report">
       <h1>Project: {_get(this.state.report, 'project.name')}</h1>
+      {this.renderTabs()}
+      <TabContent activeTab={this.state.activeTab}>
+        <TabPane tabId="circles">
+          <table className="packed-circles-view">
+            <tbody>
+            <tr>
+              <td>
+                <h3>&nbsp;</h3>
+                <svg width="600" height="600" id="chart"/>
+              </td>
+              <td>
+                {this.renderSelectedFilePreview()}
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </TabPane>
+        <TabPane tabId="graph">
+          <div id="graph-chart"/>
+        </TabPane>
+        <TabPane tabId="facts">
+          <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+        </TabPane>
+        <TabPane tabId="raw">
+          <RawReport files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+        </TabPane>
 
-      <table className="packed-circles-view">
-        <tbody>
-        <tr>
-          <td>
-            <h3>&nbsp;</h3>
-            <svg width="600" height="600" id="chart"/>
-          </td>
-          <td>
-            {this.renderSelectedFilePreview()}
-          </td>
-        </tr>
-        </tbody>
-      </table>
-
-      <hr/>
-      <div id="graph-chart">
-
-      </div>
-
-      <hr/>
-
-      <RawReport files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
-
-      <hr/>
-      <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+      </TabContent>
     </div>
   }
 
@@ -196,6 +218,43 @@ class App extends Component {
         {this.renderReport()}
       </div>
     );
+  }
+
+  renderTabs() {
+    return <Nav tabs>
+      <NavItem>
+        <NavLink
+          className={classnames({active: this.state.activeTab === 'facts'})}
+          onClick={() => { this.toggle('facts'); }}
+        >
+          <i className="icon-list"/> Facts
+        </NavLink>
+      </NavItem>
+      <NavItem>
+        <NavLink
+          className={classnames({active: this.state.activeTab === 'circles'})}
+          onClick={() => { this.toggle('circles'); }}
+        >
+          <i className="icon-sitemap"/> Packed circles map
+        </NavLink>
+      </NavItem>
+      <NavItem>
+        <NavLink
+          className={classnames({active: this.state.activeTab === 'graph'})}
+          onClick={() => { this.toggle('graph'); }}
+        >
+          <i className="icon-graph"/> Graph
+        </NavLink>
+      </NavItem>
+      <NavItem>
+        <NavLink
+          className={classnames({active: this.state.activeTab === 'raw'})}
+          onClick={() => { this.toggle('raw'); }}
+        >
+          <i className="icon-grid"/> Raw
+        </NavLink>
+      </NavItem>
+    </Nav>
   }
 }
 
