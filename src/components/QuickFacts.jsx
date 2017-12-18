@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {keyBy as _keyBy, sortBy as _sortBy, get as _get} from 'lodash'
+import {keyBy as _keyBy, sortBy as _sortBy, get as _get, round as _round} from 'lodash'
 import {renderCloneClass, renderFileMetrics} from "../services/stringHelper"
-import {getLineNumbersFromEntries, getLinesAmountFromLocation, getReportPerFile} from "../services/duplicationReportService"
+import {getDuplicateLines, getDuplicateLinesForFile, getLineNumbersFromEntries, getLinesAmountFromLocation, getReportPerFile} from "../services/duplicationReportService"
 
 class QuickFacts extends React.Component {
 
@@ -12,7 +12,6 @@ class QuickFacts extends React.Component {
   }
 
   render() {
-    console.log("REPORT", this.props.report)
     if (!this.props.report) {
       return null
     }
@@ -21,7 +20,7 @@ class QuickFacts extends React.Component {
     const files = getReportPerFile(this.props.report);
     const filesMetrics = Object.keys(files).map((path) => {
       const nodes = files[path]
-      const lines = getLineNumbersFromEntries(nodes)
+      const lines = getDuplicateLinesForFile(path, this.props.report)
 
       return {
         path: path,
@@ -59,6 +58,9 @@ class QuickFacts extends React.Component {
     const largestFileByDuplicateLines = filesSortedByDuplicateLinesCount[filesSortedByDuplicateLinesCount.length - 1]
     const largestFileByDuplicates = filesSortedByDuplicatesCount[filesSortedByDuplicatesCount.length - 1]
 
+    const linesOfCode = _get(this.props.report, 'project.linesOfCode', 0);
+    const duplicateLines = getDuplicateLines(this.props.report);
+
     return (
       <div>
         <table className="table">
@@ -76,7 +78,15 @@ class QuickFacts extends React.Component {
               Project lines of code
             </th>
             <td>
-              {_get(this.props.report, 'project.linesOfCode')}
+              {linesOfCode}
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Duplicate lines
+            </th>
+            <td>
+              {duplicateLines} ({_round(duplicateLines / linesOfCode * 100, 2)}% of total project)
             </td>
           </tr>
           <tr>
@@ -96,8 +106,12 @@ class QuickFacts extends React.Component {
             <td>{renderCloneClass(largestClassByTotalLines)}</td>
           </tr>
           <tr>
+            <th>Files in project</th>
+            <td>{_get(this.props.report, 'project.projectFiles', []).length}</td>
+          </tr>
+          <tr>
             <th>Files with clones</th>
-            <td>{Object.keys(files).length}</td>
+            <td>{Object.keys(_get(this.props.report, 'project.duplicateFiles', {})).length}</td>
           </tr>
           <tr>
             <th>File with most cloned lines</th>

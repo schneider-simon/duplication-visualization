@@ -5,11 +5,11 @@ import './App.css';
 import './styles/icons/css/fontello.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import {tomorrowNightEighties} from 'react-syntax-highlighter/styles/hljs';
-import {getDuplicationReportDirectories, getLineNumbersFromEntries} from "./services/duplicationReportService"
+import {fileObjectFromPath, getDuplicationReportDirectories, getLineNumbersFromEntries} from "./services/duplicationReportService"
 import {get as _get} from "lodash"
 import RawReport from "./components/RawReport"
 import {PackedCirclesChart} from "./services/packedCirclesChart"
-import {drawGraphChart, GraphChart} from "./services/graphChart"
+import {GraphChart} from "./services/graphChart"
 import QuickFacts from "./components/QuickFacts"
 import * as classnames from "classnames"
 import {Nav, NavItem, NavLink, TabContent, TabPane} from "reactstrap"
@@ -35,6 +35,10 @@ class App extends Component {
   }
 
   onSelectFile(file) {
+    if (typeof file === "string") {
+      file = fileObjectFromPath(file, this.state.report)
+    }
+
     const url = `projects/${this.state.report.project.name}${file.path}`
 
     if (this.state.report.project && typeof this.state.files[file.path] === 'undefined') {
@@ -67,6 +71,12 @@ class App extends Component {
       })
     }
 
+    if (this.graphChart) {
+      this.graphChart.update({
+        selectedFile: this.state.selectedFile
+      })
+    }
+
     if (!previousState.report && this.state.report) {
       this.onInitReport()
     }
@@ -87,10 +97,13 @@ class App extends Component {
         selectedFile: this.state.selectedFile
       });
 
-      this.graphChart = new GraphChart({selector: "#graph-chart", data: this.state.report});
+      this.graphChart = new GraphChart({
+        selector: "#graph-chart",
+        data: this.state.report,
+        onSelectFile: this.onSelectFile
+      });
 
     }, 500)
-    console.log(directories);
   }
 
   toggle(tab) {
@@ -117,7 +130,16 @@ class App extends Component {
     const isClone = duplicateLines.indexOf(lineNumber) !== -1;
 
     if (isClone) {
-      style.backgroundColor = "rgba(255,0,0,0.5)";
+      style.backgroundColor = "rgba(255,0,0,0.2)";
+    }
+
+    const duplicateFiles = _get(this.state.report, 'project.duplicateFiles', {})
+
+    const isCloneDuplicate = duplicateFiles[fileData.path] && duplicateFiles[fileData.path].indexOf(lineNumber) !== -1
+    console.log(isCloneDuplicate)
+
+    if (isCloneDuplicate) {
+      style.backgroundColor = "rgba(255,0,0,0.6)";
     }
 
     return style;
@@ -135,7 +157,6 @@ class App extends Component {
     }
 
     return <div>
-      <h3>{this.state.selectedFile.path}</h3>
       <div className="syntax-highlight">
         <SyntaxHighlighter
           showLineNumbers={true}
@@ -181,6 +202,7 @@ class App extends Component {
 
     return <div className="app-report">
       <h1>Project: {_get(this.state.report, 'project.name')}</h1>
+      <h3>{(this.state.selectedFile) ? this.state.selectedFile.path : "-"}</h3>
       {this.renderTabs()}
       <TabContent activeTab={this.state.activeTab}>
         <TabPane tabId="circles">
@@ -188,7 +210,6 @@ class App extends Component {
             <tbody>
             <tr>
               <td>
-                <h3>&nbsp;</h3>
                 <svg width="600" height="600" id="chart"/>
               </td>
               <td>

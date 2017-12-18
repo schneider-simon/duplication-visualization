@@ -5,6 +5,16 @@ import _keyBy from 'lodash/keyBy'
 import _get from 'lodash/get'
 import {getFileNameFromPath} from "./stringHelper"
 
+export const getDuplicateLinesForFile = (path, report) => {
+  let lines = _get(report, 'project.duplicateFiles', {})[path]
+
+  if (!lines) {
+    return []
+  }
+
+  return lines;
+}
+
 export const getDuplicationReportDirectories = (duplicationReport) => {
   const directories = {"name": "flare", "children": []};
 
@@ -13,7 +23,7 @@ export const getDuplicationReportDirectories = (duplicationReport) => {
   Object.keys(filesData).forEach((location) => {
     const pieces = _trim(location, '/').split("/")
     const entries = filesData[location];
-    const lines = entries.reduce((lines, entry) => lines.concat(entry.lines), [])
+    const lines = getDuplicateLinesForFile(location, duplicationReport)
 
     let currentObject = directories;
     pieces.forEach((piece, i) => {
@@ -205,4 +215,27 @@ export const getDuplicationClasses = (report) => {
 
     return duplicationClass
   })
+}
+
+export const getDuplicateLines = (report) => {
+  const files = _get(report, "project.duplicateFiles", {});
+
+  return Object.keys(files).reduce((sum, path) => {
+    return sum + files[path].length
+  }, 0)
+}
+
+export const fileObjectFromPath = (path, report) => {
+  const pieces = _trim(path, '/').split("/")
+  const name = pieces[pieces.length - 1]
+
+  const nodes = report.nodes.filter((node) => {
+    return _get(node, 'location.path') === path
+  })
+
+  return {
+    name,
+    path,
+    entries: nodes
+  }
 }

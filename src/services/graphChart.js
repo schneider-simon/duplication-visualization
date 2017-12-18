@@ -1,4 +1,5 @@
 import vis from 'vis'
+import {get as _get, cloneDeep as _cloneDeep} from "lodash"
 import {getEdgesFromReport, getFileEdgesFromReport, getFileNodesFromReport, getNodesFromReport} from "./duplicationReportService"
 
 export class GraphChart {
@@ -41,9 +42,25 @@ export class GraphChart {
     this.network.on("stabilizationIterationsDone", () => {
       this.network.setOptions({physics: true});
     })
+
+    this.network.on("selectNode", (selection) => {
+      if (this.props.useClones) {
+        return
+      }
+
+      this.props.onSelectFile(selection.nodes[0])
+    })
   }
 
-  update() {
-    console.log("UPDATE graph chart")
+  update(nextProps) {
+    const oldProps = this.props
+
+    this.props = Object.assign({}, oldProps, nextProps)
+
+    if (oldProps.selectedFile !== this.props.selectedFile && this.network) {
+      this.network.setSelection({
+        nodes: (this.props.selectedFile) ? [this.props.selectedFile.path] : []
+      })
+    }
   }
 }

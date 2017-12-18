@@ -7,18 +7,7 @@ import {renderLineRange} from "../services/stringHelper"
 
 class RawReport extends React.Component {
   onSelectFile(path) {
-    const pieces = _trim(path, '/').split("/")
-    const name = pieces[pieces.length - 1]
-
-    const nodes = this.props.report.nodes.filter((node) => {
-      return _get(node, 'location.path') === path
-    })
-
-    this.props.onSelectFile({
-      name,
-      path,
-      entries: nodes
-    })
+    this.props.onSelectFile(path)
   }
 
   renderRowDetails(row) {
