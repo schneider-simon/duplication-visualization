@@ -3,6 +3,7 @@ import _trim from 'lodash/trim'
 import _uniq from 'lodash/uniq'
 import _keyBy from 'lodash/keyBy'
 import _get from 'lodash/get'
+import _sortBy from 'lodash/sortBy'
 import {getFileNameFromPath} from "./stringHelper"
 
 export const getDuplicateLinesForFile = (path, report) => {
@@ -120,6 +121,23 @@ export const getLineNumbersFromEntries = (entries) => {
   }, []))
 }
 
+export const getEntriesFromLineNumber = (entries, lineNumber) => {
+  return entries.filter((entry) => {
+    const lines = getLineNumbersFromLocation(entry.location);
+    return lines.indexOf(lineNumber) !== -1
+  })
+}
+
+export const getLargestEntry = (entries) => {
+  if (!entries || entries.length === 0) {
+    return null
+  }
+
+  return _sortBy(entries, (entry) => {
+    return getLinesAmountFromLocation(entry.location)
+  })[entries.length - 1]
+}
+
 export const getNodesFromReport = (report) => {
   return report.nodes.map((node) => {
     return {
@@ -214,6 +232,14 @@ export const getDuplicationClasses = (report) => {
     }))
 
     return duplicationClass
+  })
+}
+
+export const getClassByEntry = (entry, cloneClasses) => {
+  return cloneClasses.find(cloneClass => {
+    return cloneClass.nodes.findIndex(node => {
+      return node.id === entry.id
+    }) !== -1
   })
 }
 

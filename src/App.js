@@ -4,15 +4,20 @@ import 'react-table/react-table.css'
 import './App.css';
 import './styles/icons/css/fontello.css';
 import SyntaxHighlighter from 'react-syntax-highlighter';
+import {createElement as highlighterCreateElement} from 'react-syntax-highlighter';
 import {tomorrowNightEighties} from 'react-syntax-highlighter/styles/hljs';
-import {fileObjectFromPath, getDuplicationReportDirectories, getLineNumbersFromEntries} from "./services/duplicationReportService"
+import {
+  fileObjectFromPath, getClassByEntry, getDuplicationClasses, getDuplicationReportDirectories, getEntriesFromLineNumber, getLargestEntry,
+  getLineNumbersFromEntries
+} from "./services/duplicationReportService"
 import {get as _get} from "lodash"
 import RawReport from "./components/RawReport"
 import {PackedCirclesChart} from "./services/packedCirclesChart"
 import {GraphChart} from "./services/graphChart"
 import QuickFacts from "./components/QuickFacts"
 import * as classnames from "classnames"
-import {Nav, NavItem, NavLink, TabContent, TabPane} from "reactstrap"
+import {Modal, ModalBody, ModalHeader, Nav, NavItem, NavLink, TabContent, TabPane} from "reactstrap"
+import {renderLocation} from "./services/stringHelper"
 
 class App extends Component {
 
@@ -25,7 +30,8 @@ class App extends Component {
       //report: null,
       report: require('./data/duplicates.json'),
       reportInput: "",
-      activeTab: "facts"
+      activeTab: "facts",
+      modalData: null
     }
 
     this.packedCirclesChart = null
@@ -122,29 +128,6 @@ class App extends Component {
     })
   }
 
-  lineStyle(lineNumber) {
-    const fileData = this.state.selectedFile
-    const duplicateLines = getLineNumbersFromEntries(fileData.entries)
-    const style = {display: 'block'}
-
-    const isClone = duplicateLines.indexOf(lineNumber) !== -1;
-
-    if (isClone) {
-      style.backgroundColor = "rgba(255,0,0,0.2)";
-    }
-
-    const duplicateFiles = _get(this.state.report, 'project.duplicateFiles', {})
-
-    const isCloneDuplicate = duplicateFiles[fileData.path] && duplicateFiles[fileData.path].indexOf(lineNumber) !== -1
-    console.log(isCloneDuplicate)
-
-    if (isCloneDuplicate) {
-      style.backgroundColor = "rgba(255,0,0,0.6)";
-    }
-
-    return style;
-  }
-
   renderSelectedFilePreview() {
     if (!this.state.selectedFile) {
       return
@@ -163,7 +146,7 @@ class App extends Component {
           language='java'
           style={tomorrowNightEighties}
           wrapLines={true}
-          lineStyle={this.lineStyle.bind(this)}
+          renderer={this.customRenderer.bind(this)}
         >
           {file}
         </SyntaxHighlighter>
@@ -237,6 +220,7 @@ class App extends Component {
     return (
       <div className="App">
         {this.renderReport()}
+        {this.renderModal()}
       </div>
     );
   }
@@ -276,6 +260,69 @@ class App extends Component {
         </NavLink>
       </NavItem>
     </Nav>
+  }
+
+  showModal(modalData) {
+    this.setState({
+      modalData
+    })
+  }
+
+  renderModal() {
+    const data = this.state.modalData
+    const toggle = () => this.showModal(null)
+
+    const renderNodes = () => {
+      if (!data || !data.cloneClass || !data.cloneClass.nodes) {
+        return null
+      }
+
+      return data.cloneClass.nodes.map(node => {
+        return <li>{renderLocation(node.location)}</li>
+      })
+    }
+
+    return <Modal isOpen={this.state.modalData !== null} toggle={toggle}>
+      <ModalHeader toggle={toggle}>Selected clone class</ModalHeader>
+      <ModalBody>
+        <ul>{renderNodes()}</ul>
+      </ModalBody>
+    </Modal>
+  }
+
+  customRenderer({rows, stylesheet, useInlineStyles}) {
+    const fileData = this.state.selectedFile
+    const duplicateLines = getLineNumbersFromEntries(fileData.entries)
+    const cloneClasses = getDuplicationClasses(this.state.report)
+
+    return (
+      rows.map((node, i) => {
+        const element = highlighterCreateElement({
+          node,
+          stylesheet,
+          useInlineStyles,
+          key: `code-segement${i}`
+        })
+
+        const lineNumber = i + 1
+
+        const entries = getEntriesFromLineNumber(fileData.entries, lineNumber)
+        const isClone = duplicateLines.indexOf(lineNumber) !== -1;
+        const duplicateFiles = _get(this.state.report, 'project.duplicateFiles', {})
+        const isCodeClone = duplicateFiles[fileData.path] && duplicateFiles[fileData.path].indexOf(lineNumber) !== -1
+
+        const mainEntry = getLargestEntry(entries)
+        let onClick = null
+
+        if (mainEntry) {
+          const cloneClass = getClassByEntry(mainEntry, cloneClasses)
+          onClick = () => this.showModal({cloneClass: cloneClass, entry: mainEntry})
+        }
+
+        return <div onClick={onClick} key={i} title={(mainEntry) ? mainEntry.id : "-"}
+                    className={classnames({"code-line": true, "is-clone": isClone, "is-code-clone": isCodeClone})}>{element}</div>
+      })
+    );
   }
 }
 

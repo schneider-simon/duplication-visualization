@@ -1,5 +1,9 @@
 import React from 'react';
 
+export const renderLocation = (location) => {
+  return `${location.path} [${renderLineRange(location.startLine, location.endLine)}]`
+}
+
 export const renderLineRange = (startLine, endLine) => {
   if (startLine === endLine) {
     return startLine

@@ -50,13 +50,18 @@ class RawReport extends React.Component {
     }, {
       Header: 'Files',
       accessor: 'files.length',
-    }, {
-      Header: 'Duplicates',
-      accessor: 'nodes.length',
-    }, {
-      Header: "Lines",
-      accessor: 'length'
-    }]
+    },
+      {
+        Header: 'File names',
+        id: "fileNames",
+        accessor: (d) => d.files.join(", ")
+      }, {
+        Header: 'Duplicates',
+        accessor: 'nodes.length',
+      }, {
+        Header: "Lines",
+        accessor: 'length'
+      }]
 
     return (
       <div className="raw-report">

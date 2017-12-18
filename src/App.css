@@ -75,3 +75,15 @@
     opacity: 0.5;
 }
 
+.code-line.is-clone {
+    background: rgba(255, 0, 0, 0.2);
+}
+
+.code-line.is-clone:hover {
+    cursor: pointer;
+}
+
+.code-line.is-code-clone {
+    background: rgba(255, 0, 0, 0.5);
+}
+
