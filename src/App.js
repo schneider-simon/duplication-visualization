@@ -19,6 +19,8 @@ import * as classnames from "classnames"
 import {Modal, ModalBody, ModalHeader, Nav, NavItem, NavLink, TabContent, TabPane} from "reactstrap"
 import {renderLocation} from "./services/stringHelper"
 
+const DEBUG_MODE = window.localStorage.getItem("DEBUG_MODE") === "true"
+
 class App extends Component {
 
   constructor(props) {
@@ -28,7 +30,7 @@ class App extends Component {
       selectedFile: null,
       files: {},
       //report: null,
-      report: processReport(require('./data/duplicates.json')),
+      report: (DEBUG_MODE) ? processReport(require('./data/duplicates.json')) : null,
       reportInput: "",
       activeTab: "facts",
       modalData: null
@@ -334,7 +336,7 @@ class App extends Component {
           }
         }
 
-        if(isComment){
+        if (isComment) {
           isCodeClone = false
         }
 
