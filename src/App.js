@@ -301,6 +301,7 @@ class App extends Component {
     const fileData = this.state.selectedFile
     const duplicateLines = getLineNumbersFromEntries(fileData.entries)
     const cloneClasses = getDuplicationClasses(this.state.report)
+    const duplicateFiles = _get(this.state.report, 'project.duplicateFiles', {})
 
     return (
       rows.map((node, i) => {
@@ -313,23 +314,46 @@ class App extends Component {
 
         const lineNumber = i + 1
 
-        const entries = getEntriesFromLineNumber(fileData.entries, lineNumber)
+        const isComment = this.isComment(node)
         const isClone = duplicateLines.indexOf(lineNumber) !== -1;
-        const duplicateFiles = _get(this.state.report, 'project.duplicateFiles', {})
-        const isCodeClone = duplicateFiles[fileData.path] && duplicateFiles[fileData.path].indexOf(lineNumber) !== -1
 
-        const mainEntry = getLargestEntry(entries)
+        let entries = [];
+        let isCodeClone = false
+        let mainEntry = null
         let onClick = null
 
-        if (mainEntry) {
+        if (isClone) {
+          entries = getEntriesFromLineNumber(fileData.entries, lineNumber)
+          isCodeClone = duplicateFiles[fileData.path] && duplicateFiles[fileData.path].indexOf(lineNumber) !== -1
+          mainEntry = getLargestEntry(entries)
           const cloneClass = getClassByEntry(mainEntry, cloneClasses)
           onClick = () => this.showModal({cloneClass: cloneClass, entry: mainEntry})
+
+          if (!mainEntry) {
+            console.log("NO ENTRY FOR CLONE FOUND")
+          }
+        }
+
+        if(isComment){
+          isCodeClone = false
         }
 
         return <div onClick={onClick} key={i} title={(mainEntry) ? mainEntry.id : "-"}
                     className={classnames({"code-line": true, "is-clone": isClone, "is-code-clone": isCodeClone})}>{element}</div>
       })
     );
+  }
+
+  isComment(htmlNode) {
+    if (htmlNode.children.length === 2 && htmlNode.children[1].value && htmlNode.children[1].value.replace("↵", "").trim() === "/**") {
+      return true
+    }
+
+    if (htmlNode.children.length === 1 && htmlNode.children[0].value && htmlNode.children[0].value.replace("↵", "").trim() === "*") {
+      return true
+    }
+
+    return false
   }
 }
 

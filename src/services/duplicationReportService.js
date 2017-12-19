@@ -222,7 +222,7 @@ export const getConnectionsForId = (id, report) => {
 export const getDuplicationClasses = (report) => {
   const nodes = _keyBy(report.nodes, 'id')
 
-  return report.connections.map((connections) => {
+  const duplicationClasses = report.connections.map((connections) => {
     const duplicationClass = {
       id: connections[0],
       connections: connections,
@@ -236,14 +236,18 @@ export const getDuplicationClasses = (report) => {
 
     return duplicationClass
   })
+
+  return duplicationClasses
 }
 
 export const getClassByEntry = (entry, cloneClasses) => {
-  return cloneClasses.find(cloneClass => {
+  const cloneClass = cloneClasses.find(cloneClass => {
     return cloneClass.nodes.findIndex(node => {
-      return node.id === entry.id
+      return parseInt(node.id) === parseInt(entry.id)
     }) !== -1
   })
+
+  return cloneClass
 }
 
 export const getDuplicateLines = (report) => {
@@ -270,6 +274,7 @@ export const fileObjectFromPath = (path, report) => {
 }
 
 export const processReport = (report) => {
+  return report
   const doubleNodesPerLocation = _values(_groupBy(report.nodes, (node) => {
     return _get(node, 'location.path') + '|' + _get(node, 'location.startLine') + '-' + _get(node, 'location.endLine');
   })).filter(nodes => nodes.length > 1)
@@ -298,7 +303,7 @@ export const processReport = (report) => {
       return parseInt(mapping[id])
     }))
   }).filter(connections => {
-    return connections.length > 2
+    return connections.length >= 2
   })
 
   return report
