@@ -54,7 +54,12 @@ class RawReport extends React.Component {
       {
         Header: 'File names',
         id: "fileNames",
-        accessor: (d) => d.files.join(", ")
+        accessor: (d) => d.files.join(", "),
+        filterMethod: (filter, row) => {
+          const searchString = filter.value.toLowerCase()
+          const fileNames= row.fileNames.toLowerCase()
+          return fileNames.indexOf(searchString) !== -1
+        }
       }, {
         Header: 'Duplicates',
         accessor: 'nodes.length',
