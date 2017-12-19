@@ -1,7 +1,10 @@
 import _groupBy from 'lodash/groupBy'
 import _trim from 'lodash/trim'
+import _flatten from 'lodash/flatten'
 import _uniq from 'lodash/uniq'
+import _tail from 'lodash/tail'
 import _keyBy from 'lodash/keyBy'
+import _values from 'lodash/values'
 import _get from 'lodash/get'
 import _sortBy from 'lodash/sortBy'
 import {getFileNameFromPath} from "./stringHelper"
@@ -264,4 +267,39 @@ export const fileObjectFromPath = (path, report) => {
     path,
     entries: nodes
   }
+}
+
+export const processReport = (report) => {
+  const doubleNodesPerLocation = _values(_groupBy(report.nodes, (node) => {
+    return _get(node, 'location.path') + '|' + _get(node, 'location.startLine') + '-' + _get(node, 'location.endLine');
+  })).filter(nodes => nodes.length > 1)
+
+  const mapping = {}
+
+  doubleNodesPerLocation.forEach((nodes) => {
+    const head = nodes[0]
+    const tail = _tail(nodes)
+
+    tail.forEach((tailNode) => {
+      mapping[tailNode.id] = head.id;
+    })
+  })
+
+  report.nodes = report.nodes.filter((node) => {
+    return !mapping[node.id]
+  })
+
+  report.connections = report.connections.map(connections => {
+    return _uniq(connections.map(id => {
+      if (!mapping[id]) {
+        return id
+      }
+
+      return parseInt(mapping[id])
+    }))
+  }).filter(connections => {
+    return connections.length > 2
+  })
+
+  return report
 }

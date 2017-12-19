@@ -8,7 +8,7 @@ import {createElement as highlighterCreateElement} from 'react-syntax-highlighte
 import {tomorrowNightEighties} from 'react-syntax-highlighter/styles/hljs';
 import {
   fileObjectFromPath, getClassByEntry, getDuplicationClasses, getDuplicationReportDirectories, getEntriesFromLineNumber, getLargestEntry,
-  getLineNumbersFromEntries
+  getLineNumbersFromEntries, processReport
 } from "./services/duplicationReportService"
 import {get as _get} from "lodash"
 import RawReport from "./components/RawReport"
@@ -28,7 +28,7 @@ class App extends Component {
       selectedFile: null,
       files: {},
       //report: null,
-      report: require('./data/duplicates.json'),
+      report: processReport(require('./data/duplicates.json')),
       reportInput: "",
       activeTab: "facts",
       modalData: null
@@ -38,6 +38,7 @@ class App extends Component {
     this.graphChart = null
 
     this.onSelectFile = this.onSelectFile.bind(this)
+    this.onSelectCloneClass = this.onSelectCloneClass.bind(this)
   }
 
   onSelectFile(file) {
@@ -62,8 +63,14 @@ class App extends Component {
     }
 
     this.setState({
-      selectedFile: file
+      selectedFile: file,
+      activeTab: 'circles'
     })
+  }
+
+  onSelectCloneClass(cloneClass) {
+    console.log("SELECT CLONE CLASS", cloneClass)
+    this.showModal({cloneClass})
   }
 
   componentDidMount() {
@@ -206,7 +213,7 @@ class App extends Component {
           <div id="graph-chart"/>
         </TabPane>
         <TabPane tabId="facts">
-          <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
+          <QuickFacts files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile} onSelectCloneClass={this.onSelectCloneClass}/>
         </TabPane>
         <TabPane tabId="raw">
           <RawReport files={this.state.files} report={this.state.report} onSelectFile={this.onSelectFile}/>
@@ -278,14 +285,14 @@ class App extends Component {
       }
 
       return data.cloneClass.nodes.map(node => {
-        return <li>{renderLocation(node.location)}</li>
+        return <li key={node.id} className={"list-group-item"}>{renderLocation(node.location)}</li>
       })
     }
 
     return <Modal isOpen={this.state.modalData !== null} toggle={toggle}>
-      <ModalHeader toggle={toggle}>Selected clone class</ModalHeader>
+      <ModalHeader toggle={toggle}>Selected clone class #{_get(this.state.modalData, 'cloneClass.id')}</ModalHeader>
       <ModalBody>
-        <ul>{renderNodes()}</ul>
+        <ul className={"list-group"}>{renderNodes()}</ul>
       </ModalBody>
     </Modal>
   }

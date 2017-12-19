@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ReactTable from 'react-table'
 import {getDuplicationClasses} from "../services/duplicationReportService"
-import {get as _get, trim as _trim} from 'lodash'
+import {get as _get} from 'lodash'
 import {renderLineRange} from "../services/stringHelper"
 
 class RawReport extends React.Component {

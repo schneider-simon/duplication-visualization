@@ -11,6 +11,10 @@ class QuickFacts extends React.Component {
     return <a href="#" onClick={() => this.props.onSelectFile(file)}>{label}</a>
   }
 
+  renderCloneClass(cloneClass) {
+    return <a href="#" onClick={() => this.props.onSelectCloneClass(cloneClass)}>{renderCloneClass(cloneClass)}</a>
+  }
+
   render() {
     if (!this.props.report) {
       return null
@@ -38,10 +42,12 @@ class QuickFacts extends React.Component {
       }, 0)
 
       return {
+        id: _connections[0],
         connections: _connections,
         count: _connections.length,
         lines: Math.ceil(linesTotal / _connections.length),
-        linesTotal: linesTotal
+        linesTotal: linesTotal,
+        nodes: _connections.map(id => nodes[id])
       }
     })
 
@@ -95,15 +101,15 @@ class QuickFacts extends React.Component {
           </tr>
           <tr>
             <th>Largest clone class by nodes</th>
-            <td>{renderCloneClass(largestClassByNodes)}</td>
+            <td>{this.renderCloneClass(largestClassByNodes)}</td>
           </tr>
           <tr>
             <th>Largest clone class by lines</th>
-            <td>{renderCloneClass(largestClassByLines)}</td>
+            <td>{this.renderCloneClass(largestClassByLines)}</td>
           </tr>
           <tr>
             <th>Largest clone class by lines total</th>
-            <td>{renderCloneClass(largestClassByTotalLines)}</td>
+            <td>{this.renderCloneClass(largestClassByTotalLines)}</td>
           </tr>
           <tr>
             <th>Files in project</th>
@@ -131,7 +137,8 @@ class QuickFacts extends React.Component {
 QuickFacts.propTypes = {
   files: PropTypes.object,
   report: PropTypes.object,
-  onSelectFile: PropTypes.func
+  onSelectFile: PropTypes.func,
+  onSelectCloneClass: PropTypes.func
 };
 QuickFacts.defaultProps = {};
 
