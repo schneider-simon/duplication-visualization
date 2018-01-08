@@ -30,7 +30,7 @@ class App extends Component {
       selectedFile: null,
       files: {},
       //report: null,
-      report: (DEBUG_MODE) ? processReport(require('./data/duplicates.json')) : null,
+      report: processReport(require('./data/duplicates.json')),
       reportInput: "",
       activeTab: "facts",
       modalData: null
